@@ -2,14 +2,10 @@ name: Deploy to Cloudflare Workers
 
 # Triggered by the top-level Deploy dispatcher (.github/workflows/deploy.yml)
 # when CF secrets are configured. Manual runs via the Actions UI also
-# supported.
+# supported. Deploys the current fork branch so its Cloudflare IDs are used.
 on:
   workflow_call:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release tag to deploy (e.g. v2.1.0). Leave empty for latest.'
-        required: false
 
 # Prevent overlapping deployments.
 concurrency:
@@ -43,29 +39,7 @@ jobs:
             exit 1
           fi
 
-      - name: Resolve release tag
-  id: release
-  env:
-    GH_TOKEN: ${{ github.token }}
-    INPUT_VERSION: ${{ inputs.version }}
-  run: |
-    if [ -n "$INPUT_VERSION" ]; then
-      TAG="$INPUT_VERSION"
-    else
-      TAG=$(gh api repos/${{ github.repository }}/releases/latest --jq '.tag_name')
-    fi
-    if [ -z "$TAG" ]; then
-      echo "::error::No release found in ${{ github.repository }}"
-      exit 1
-    fi
-    echo "version=$TAG" >> "$GITHUB_OUTPUT"
-    echo "### 🚀 Deploying $TAG" >> "$GITHUB_STEP_SUMMARY"
-    
-
-- uses: actions/checkout@v6
-  with:
-    repository: ${{ github.repository }}
-    ref: ${{ steps.release.outputs.version }}
+      - uses: actions/checkout@v6
 
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
@@ -191,11 +165,9 @@ jobs:
       # config (dist/zpan/wrangler.json) that the subsequent wrangler deploy
       # consumes: it resolves the assets directory to dist/client and inlines
       # build-time defines. Must run after the D1 id patch so the generated
-      # config carries the real database_id. ZPAN_APP_VERSION sidesteps a git
-      # describe on the shallow tag checkout.
+      # config carries the real database_id.
       - name: Build
         env:
-          ZPAN_APP_VERSION: ${{ steps.release.outputs.version }}
           ZPAN_APP_COMMIT: ${{ github.sha }}
         run: pnpm build
 
