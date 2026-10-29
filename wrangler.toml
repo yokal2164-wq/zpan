@@ -88,8 +88,8 @@ database_id = "a9197d7a-6524-42f0-b646-e714dcb30b3b"
 migrations_dir = "./migrations"
 
 [[previews.kv_namespaces]]
-binding = "CACHE_KV"
-id = "7d8625bacbc54e23a46ca4464a9f64a0"
+binding = "zpan-kv"
+id = "e55ff3f17e10412d8a901be0f0d34f0c"
 
 [[previews.ratelimits]]
 name = "WEBDAV_RATE_LIMITER"
